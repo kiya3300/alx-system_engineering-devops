@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Script points subdomains to IPs of servers
+
+domain=$1
+
+function displayAll() {
+	for arg; do
+		echo -n "The subdomain $arg is a "
+		dig "$arg"."$domain" | grep -A1 'ANSWER SECTION:' | tail -n1 | awk '{print $4 " record and points to " $5}'
+	done
+}
+
+if [ $# -eq 2 ]; then
+	subdomain=$2
+	echo -n "The subdomain $2 is a "
+	dig "$subdomain"."$domain" | grep -A1 'ANSWER SECTION:' | tail -n1 | awk '{print $4 " record and points to " $5}'
+
+else
+	displayAll 'www' 'lb-01' 'web-01' 'web-02'
+fi
+
