@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
-# Configures a new Ubuntu server with a HAproxy load-balancer
-apt-get -y install software-properties-common
-add-apt-repository -y ppa:vbernat/haproxy-1.8
-apt-get -y update
-apt-get -y install haproxy=1.8.\*
-sed -i '/errorfile 504/a listen thelaura' /etc/haproxy/haproxy.cfg
-sed -i '/listen thelaura/a         bind :80' /etc/haproxy/haproxy.cfg
-sed -i '/bind :80/a         mode http' /etc/haproxy/haproxy.cfg
-sed -i '/mode http/a         server 22691-web-01 3.239.87.85:80 check' /etc/haproxy/haproxy.cfg
-sed -i '/server server 22691-web-01 3.239.87.85:80 check/a         server 22691-web-02 44.200.87.28:80 check' /etc/haproxy/haproxy.cfg
-sed -i '/#EXTRAOPTS="-de -m 16"/a ENABLED=1' /etc/default/haproxy
-service haproxy start
+# install and configures HAproxy on the server
+# to load balance between two servers
+
+sudo apt-get -y update
+sudo apt -y install haproxy
+echo "
+frontend node-http
+    bind *:80
+    mode http
+    default_backend the_backend
+backend the_backend
+    balance roundrobin
+    option forwardfor
+    server 22691-web-01 3.239.87.85:80 check
+    server 22691-web-02 44.200.87.28:80 check
+" | sudo tee -a /etc/haproxy/haproxy.cfg > /dev/null
+service haproxy restart
